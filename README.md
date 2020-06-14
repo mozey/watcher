@@ -10,7 +10,7 @@ Install
 
 Update
 
-    go get -d github.com/mozey/watcher
+    go get -u github.com/mozey/watcher
     go install github.com/mozey/watcher
 
 Watch file, and print debug logs
