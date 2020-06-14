@@ -4,7 +4,21 @@ CLI wrapper for [fsnotify](https://github.com/fsnotify/fsnotify)
 
 ## Quick start
 
-    APP_DEBUG=true APP_DIR=/Users/mozey/pro/watcher go run ./main.go -r \
+Install
+
+    go get github.com/mozey/watcher
+
+Update
+
+    go get -d github.com/mozey/watcher
+
+Watch file, only output changes
+
+    APP_DIR=$(pwd) $GOPATH/bin/watcher -r -dir testdata
+
+Run inside module, and print debug logs
+
+    APP_DEBUG=true APP_DIR=$(pwd) go run ./main.go -r \
     -dir testdata \
     -include ".*.txt$" \
     -include ".*.json$" \

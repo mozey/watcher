@@ -99,7 +99,7 @@ func (in *CmdIn) FileIncluded(p string) (included bool, err error) {
 func (in *CmdIn) DirExcluded(p string) (excluded bool, err error) {
 	if len(in.ExcludeDirs) == 0 {
 		// No dirs are excluded by default
-		return true, nil
+		return false, nil
 	}
 	// TODO Compile patterns once and cache
 	for _, excludeDir := range in.ExcludeDirs {
