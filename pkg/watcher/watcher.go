@@ -199,20 +199,28 @@ func Cmd(in *CmdIn) (out *CmdOut, err error) {
 						// Check limit
 						if r < in.Limit {
 							if info.IsDir() {
-								// Check dir exclusion filter
-								excluded, err := in.DirExcluded(path)
-								if err != nil {
-									return errors.WithStack(err)
-								}
-								if !excluded {
-									// Watch sub dir
-									log.Debug().Str("path", path).
-										Msg("Add sub path")
-									err = out.Watcher.Add(path)
+								if strings.HasPrefix(info.Name(), ".") {
+									// Skip hidden dirs
+									return filepath.SkipDir
+								} else {
+									// Check dir exclusion filter
+									excluded, err := in.DirExcluded(path)
 									if err != nil {
 										return errors.WithStack(err)
 									}
-									r++
+									if excluded {
+										// Skip excluded dirs
+										return filepath.SkipDir
+									} else {
+										// Watch sub dir
+										log.Debug().Str("path", path).
+											Msg("Add sub path")
+										err = out.Watcher.Add(path)
+										if err != nil {
+											return errors.WithStack(err)
+										}
+										r++
+									}
 								}
 							}
 						}
