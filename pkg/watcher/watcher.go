@@ -43,6 +43,8 @@ func Timeout(cancel chan bool, duration time.Duration, cb func()) {
 type CmdIn struct {
 	// AppDir is the application root
 	AppDir string
+	// Version
+	Version bool
 	// WatchDirs is the dirs to watch
 	WatchDirs MultiFlag
 	// Recursive can be set to watch sub dirs
@@ -57,8 +59,13 @@ type CmdIn struct {
 	ExcludeDirs MultiFlag
 }
 
+const CmdVersion = "version"
+const CmdWatch = "watch"
+
 // CmdOut for use with Cmd function
 type CmdOut struct {
+	// Cmd
+	Cmd string
 	// Watcher
 	Watcher *fsnotify.Watcher
 }
@@ -66,6 +73,7 @@ type CmdOut struct {
 func ParseFlags() *CmdIn {
 	in := CmdIn{}
 
+	flag.BoolVar(&in.Version, "version", false, "Print version")
 	flag.BoolVar(&in.Recursive, "r", false, "Recursively watch sub dirs")
 	flag.IntVar(&in.Limit, "l", 100, "Limit dirs to include recursively")
 	flag.IntVar(&in.Delay, "d", 1000,
@@ -150,6 +158,12 @@ func (in *CmdIn) Watch(watcher *fsnotify.Watcher) {
 
 func Cmd(in *CmdIn) (out *CmdOut, err error) {
 	out = &CmdOut{}
+
+	if in.Version {
+		out.Cmd = CmdVersion
+		return out, nil
+	}
+	out.Cmd = CmdWatch
 
 	out.Watcher, err = fsnotify.NewWatcher()
 	if err != nil {

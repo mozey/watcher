@@ -28,3 +28,7 @@ Run inside module, and print debug logs
     -include ".*.txt$" \
     -include ".*.json$" \
     -excludeDir ".*exclude.*"
+    
+Print version
+
+    APP_DEBUG=true APP_DIR=$(pwd) go run ./main.go -v
