@@ -13,11 +13,11 @@ Update
     go get -u github.com/mozey/watcher
     go install github.com/mozey/watcher
 
-Watch file, and print debug logs
+Watch files, and print debug logs
 
     APP_DEBUG=true APP_DIR=$(pwd) $GOPATH/bin/watcher -r -dir testdata
     
-Watch file, only output changes
+Watch files, only output changes
 
     APP_DIR=$(pwd) $GOPATH/bin/watcher -r -dir testdata
 
