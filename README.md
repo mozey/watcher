@@ -31,4 +31,4 @@ Run inside module, and print debug logs
     
 Print version
 
-    APP_DEBUG=true APP_DIR=$(pwd) go run ./main.go -v
+    APP_DEBUG=true APP_DIR=$(pwd) go run ./main.go -version
