@@ -43,6 +43,8 @@ func Timeout(cancel chan bool, duration time.Duration, cb func()) {
 
 // CmdIn for use with command functions
 type CmdIn struct {
+	// Debug mode
+	Debug bool
 	// BaseDir for relative paths
 	BaseDir string
 	// Version
@@ -142,6 +144,10 @@ func (in *CmdIn) Watch(watcher *fsnotify.Watcher) {
 			}
 
 			if included {
+				log.Debug().
+					Str("op", event.Op.String()).
+					Str("name", event.Name).
+					Msg("included")
 				// Cancel previous timeout if set
 				if cancel != nil {
 					close(cancel)
@@ -239,9 +245,11 @@ func Cmd(in *CmdIn) (out *CmdOut, err error) {
 	return out, nil
 }
 
-func Main() (out *CmdOut, err error) {
+func Main(debug bool) (out *CmdOut, err error) {
 	// Parse flags
 	in := ParseFlags()
+
+	in.Debug = debug
 
 	// Base dir is required, resolve in this order (flag, env, working dir)
 	if in.BaseDir == "" {

@@ -11,6 +11,8 @@ import (
 	"syscall"
 )
 
+const AppDebug = "APP_DEBUG"
+
 func main() {
 	// Exit on signal (ctrl + c)
 	sig := make(chan os.Signal, 1)
@@ -19,15 +21,15 @@ func main() {
 	logutil.SetupLogger(true)
 
 	// Override SetupLogger log level
-	debugKey := "APP_DEBUG"
-	debug := os.Getenv(debugKey)
+	s := os.Getenv(AppDebug)
+	debug := s == "true"
 	level := zerolog.InfoLevel
-	if debug == "true" {
+	if debug {
 		level = zerolog.DebugLevel
 	}
 	zerolog.SetGlobalLevel(level)
 
-	out, err := watcher.Main()
+	out, err := watcher.Main(debug)
 	if err != nil {
 		log.Error().Stack().Err(err).Msg("")
 		os.Exit(2)
