@@ -12,16 +12,24 @@ Update
 
     go get -u github.com/mozey/watcher
     go install github.com/mozey/watcher
-
-Watch files, and print debug logs
-
-    APP_DEBUG=true APP_DIR=$(pwd) $GOPATH/bin/watcher -r -dir testdata
     
+Print version
+    
+    $GOPATH/bin/watcher -version
+
 Watch files, only output changes
+
+    $GOPATH/bin/watcher -dir testdata
+    
+Watch files recursively, pass in `APP_DIR`
 
     APP_DIR=$(pwd) $GOPATH/bin/watcher -r -dir testdata
 
-Run inside module, and print debug logs
+Watch files recursively, and print debug logs
+
+    APP_DEBUG=true APP_DIR=$(pwd) $GOPATH/bin/watcher -r -dir testdata
+    
+Use `go run` inside module
 
     APP_DEBUG=true APP_DIR=$(pwd) go run ./main.go -r \
     -dir testdata \
@@ -29,6 +37,3 @@ Run inside module, and print debug logs
     -include ".*.json$" \
     -excludeDir ".*exclude.*"
     
-Print version
-
-    APP_DEBUG=true APP_DIR=$(pwd) go run ./main.go -version

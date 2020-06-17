@@ -20,7 +20,7 @@ func main() {
 
 	// Override SetupLogger log level
 	debugKey := "APP_DEBUG"
-	debug := os.Getenv(debugKey) // TODO Configurable debugKey
+	debug := os.Getenv(debugKey)
 	level := zerolog.InfoLevel
 	if debug == "true" {
 		level = zerolog.DebugLevel

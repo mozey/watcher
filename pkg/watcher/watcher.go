@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+const AppDir = "APP_DIR"
+
 type MultiFlag []string
 
 func (f *MultiFlag) String() string {
@@ -41,8 +43,8 @@ func Timeout(cancel chan bool, duration time.Duration, cb func()) {
 
 // CmdIn for use with command functions
 type CmdIn struct {
-	// AppDir is the application root
-	AppDir string
+	// BaseDir for relative paths
+	BaseDir string
 	// Version
 	Version bool
 	// WatchDirs is the dirs to watch
@@ -78,6 +80,7 @@ func ParseFlags() *CmdIn {
 	flag.IntVar(&in.Limit, "l", 100, "Limit dirs to include recursively")
 	flag.IntVar(&in.Delay, "d", 1000,
 		"Delay in milliseconds before printing changes")
+	flag.StringVar(&in.BaseDir, "b", "", "Base dir for relative paths")
 	flag.Var(&in.WatchDirs, "dir", "Dirs to watch")
 	flag.Var(&in.IncludeFiles, "include", "Only include matching files")
 	flag.Var(&in.ExcludeDirs, "excludeDir", "Exclude matching dirs")
@@ -175,7 +178,7 @@ func Cmd(in *CmdIn) (out *CmdOut, err error) {
 	for _, relativePath := range in.WatchDirs {
 
 		// Use absolute paths
-		absolutePath := path.Join(in.AppDir, relativePath)
+		absolutePath := path.Join(in.BaseDir, relativePath)
 
 		// Check dir exclusion filter
 		excluded, err := in.DirExcluded(absolutePath)
@@ -240,14 +243,25 @@ func Main() (out *CmdOut, err error) {
 	// Parse flags
 	in := ParseFlags()
 
-	// TODO Use current dir if appDir is empty?
-	// appDir is required
-	appDirKey := "APP_DIR"
-	appDir := os.Getenv(appDirKey) // TODO Configurable appDirKey
-	if appDir == "" {
-		return out, errors.WithStack(fmt.Errorf("%v env not set\n", appDirKey))
+	// Base dir is required, resolve in this order (flag, env, working dir)
+	if in.BaseDir == "" {
+		in.BaseDir = os.Getenv(AppDir)
+		if in.BaseDir == "" {
+			in.BaseDir, err = os.Getwd()
+			if err != nil {
+				return out, errors.WithStack(err)
+			}
+			_, err := os.Stat(in.BaseDir)
+			if err != nil {
+				if os.IsNotExist(err) {
+					return out, errors.WithStack(
+						fmt.Errorf("invalid base dir"))
+				} else {
+					return out, errors.WithStack(err)
+				}
+			}
+		}
 	}
-	in.AppDir = appDir
 
 	// Run cmd
 	out, err = Cmd(in)
