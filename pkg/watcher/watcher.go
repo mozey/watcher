@@ -59,6 +59,8 @@ type CmdIn struct {
 	Limit int
 	// IncludeFiles matching patterns
 	IncludeFiles MultiFlag
+	// ExcludeFiles matching patterns
+	ExcludeFiles MultiFlag
 	// ExcludeDirs matching patterns
 	ExcludeDirs MultiFlag
 }
@@ -80,11 +82,12 @@ func ParseFlags() *CmdIn {
 	flag.BoolVar(&in.Version, "version", false, "Print version")
 	flag.BoolVar(&in.Recursive, "r", false, "Recursively watch sub dirs")
 	flag.IntVar(&in.Limit, "l", 100, "Limit dirs to include recursively")
-	flag.IntVar(&in.Delay, "d", 1000,
+	flag.IntVar(&in.Delay, "d", 1500,
 		"Delay in milliseconds before printing changes")
 	flag.StringVar(&in.BaseDir, "b", "", "Base dir for relative paths")
 	flag.Var(&in.WatchDirs, "dir", "Dirs to watch")
 	flag.Var(&in.IncludeFiles, "include", "Only include matching files")
+	flag.Var(&in.ExcludeFiles, "exclude", "Exclude matching files")
 	flag.Var(&in.ExcludeDirs, "excludeDir", "Exclude matching dirs")
 	flag.Parse()
 
@@ -92,15 +95,27 @@ func ParseFlags() *CmdIn {
 }
 
 func (in *CmdIn) FileIncluded(p string) (included bool, err error) {
+	// TODO Compile patterns once and cache?
+	// Excluded?
+	for _, excludeFile := range in.ExcludeFiles {
+		match, err := regexp.MatchString(excludeFile, p)
+		if err != nil {
+			return false, errors.WithStack(err)
+		}
+		if match {
+			log.Debug().Str("name", p).Msg("Excluded")
+			return false, nil
+		}
+	}
+	// Included?
 	if len(in.IncludeFiles) == 0 {
 		// All files are included by default
 		return true, nil
 	}
-	// TODO Compile patterns once and cache
 	for _, includeFile := range in.IncludeFiles {
 		match, err := regexp.MatchString(includeFile, p)
 		if err != nil {
-			return included, errors.WithStack(err)
+			return false, errors.WithStack(err)
 		}
 		if match {
 			return true, nil
@@ -147,7 +162,7 @@ func (in *CmdIn) Watch(watcher *fsnotify.Watcher) {
 				log.Debug().
 					Str("op", event.Op.String()).
 					Str("name", event.Name).
-					Msg("included")
+					Msg("Included")
 				// Cancel previous timeout if set
 				if cancel != nil {
 					close(cancel)
@@ -204,16 +219,16 @@ func Cmd(in *CmdIn) (out *CmdOut, err error) {
 			r := 0
 			if in.Recursive {
 				err = filepath.Walk(absolutePath,
-					func(path string, info os.FileInfo, err error) error {
-						// Check limit
-						if r < in.Limit {
+					func(p string, info os.FileInfo, err error) error {
+						// Don't include path twice and check limit
+						if p != absolutePath && r < in.Limit {
 							if info.IsDir() {
 								if strings.HasPrefix(info.Name(), ".") {
 									// Skip hidden dirs
 									return filepath.SkipDir
 								} else {
 									// Check dir exclusion filter
-									excluded, err := in.DirExcluded(path)
+									excluded, err := in.DirExcluded(p)
 									if err != nil {
 										return errors.WithStack(err)
 									}
@@ -222,9 +237,9 @@ func Cmd(in *CmdIn) (out *CmdOut, err error) {
 										return filepath.SkipDir
 									} else {
 										// Watch sub dir
-										log.Debug().Str("path", path).
+										log.Debug().Str("path", p).
 											Msg("Add sub path")
-										err = out.Watcher.Add(path)
+										err = out.Watcher.Add(p)
 										if err != nil {
 											return errors.WithStack(err)
 										}

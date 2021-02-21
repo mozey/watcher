@@ -38,5 +38,6 @@ Use `go run` inside module
     APP_DEBUG=true APP_DIR=$(pwd) go run ./main.go -r -dir testdata \
     -include ".*.txt$" \
     -include ".*.json$" \
-    -excludeDir ".*exclude.*"
+    -excludeDir ".*exclude.*" \
+    -exclude ".*\/d.txt$"
     
