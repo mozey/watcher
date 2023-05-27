@@ -3,18 +3,17 @@ package watcher
 import (
 	"flag"
 	"fmt"
-	"github.com/fsnotify/fsnotify"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog/log"
 	"os"
 	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
-)
 
-const AppDir = "APP_DIR"
+	"github.com/fsnotify/fsnotify"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
+)
 
 type MultiFlag []string
 
@@ -47,8 +46,8 @@ type CmdIn struct {
 	Debug bool
 	// BaseDir for relative paths
 	BaseDir string
-	// Version
-	Version bool
+	// PrintVersion
+	PrintVersion bool
 	// WatchDirs is the dirs to watch
 	WatchDirs MultiFlag
 	// Recursive can be set to watch sub dirs
@@ -79,7 +78,7 @@ type CmdOut struct {
 func ParseFlags() *CmdIn {
 	in := CmdIn{}
 
-	flag.BoolVar(&in.Version, "version", false, "Print version")
+	flag.BoolVar(&in.PrintVersion, "version", false, "Print version")
 	flag.BoolVar(&in.Recursive, "r", false, "Recursively watch sub dirs")
 	flag.IntVar(&in.Limit, "l", 100, "Limit dirs to include recursively")
 	flag.IntVar(&in.Delay, "d", 1500,
@@ -183,7 +182,7 @@ func (in *CmdIn) Watch(watcher *fsnotify.Watcher) {
 func Cmd(in *CmdIn) (out *CmdOut, err error) {
 	out = &CmdOut{}
 
-	if in.Version {
+	if in.PrintVersion {
 		out.Cmd = CmdVersion
 		return out, nil
 	}
@@ -199,7 +198,13 @@ func Cmd(in *CmdIn) (out *CmdOut, err error) {
 	for _, relativePath := range in.WatchDirs {
 
 		// Use absolute paths
-		absolutePath := path.Join(in.BaseDir, relativePath)
+		var absolutePath string
+		if filepath.IsAbs(relativePath) {
+			absolutePath = relativePath
+		} else {
+			// Prefix basedir
+			absolutePath = path.Join(in.BaseDir, relativePath)
+		}
 
 		// Check dir exclusion filter
 		excluded, err := in.DirExcluded(absolutePath)
@@ -266,9 +271,11 @@ func Main(debug bool) (out *CmdOut, err error) {
 
 	in.Debug = debug
 
-	// Base dir is required, resolve in this order (flag, env, working dir)
+	// Resolve base dir in this order (flag, env, working dir).
+	// Specifying absolute paths for dirs/files to watch is also supported,
+	// in that case the dir/file path is not prefixed with the base dir
 	if in.BaseDir == "" {
-		in.BaseDir = os.Getenv(AppDir)
+		in.BaseDir = os.Getenv("APP_DIR")
 		if in.BaseDir == "" {
 			in.BaseDir, err = os.Getwd()
 			if err != nil {

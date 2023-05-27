@@ -2,16 +2,22 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/mozey/logutil"
 	"github.com/mozey/watcher/pkg/watcher"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"os"
-	"os/signal"
-	"syscall"
 )
 
-const AppDebug = "APP_DEBUG"
+// version has a hard-coded default value
+// https://github.com/mozey/config/issues/20
+// For custom builds, the version can be overwritten with ldflags, see
+// "Golang compile environment variable into binary"
+// https://stackoverflow.com/a/47665780/639133
+var version string = "v0.2.0"
 
 func main() {
 	// Exit on signal (ctrl + c)
@@ -21,8 +27,7 @@ func main() {
 	logutil.SetupLogger(true)
 
 	// Override SetupLogger log level
-	s := os.Getenv(AppDebug)
-	debug := s == "true"
+	debug := os.Getenv("APP_DEBUG") == "true"
 	level := zerolog.InfoLevel
 	if debug {
 		level = zerolog.DebugLevel
@@ -37,8 +42,7 @@ func main() {
 
 	exitCode := 0
 	if out.Cmd == watcher.CmdVersion {
-		// TODO Add version
-		fmt.Println("n/a")
+		fmt.Println(version)
 		sig <- os.Signal(syscall.SIGINT)
 
 	} else if out.Cmd == watcher.CmdWatch {

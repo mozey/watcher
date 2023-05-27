@@ -5,43 +5,48 @@ CLI wrapper for [fsnotify](https://github.com/fsnotify/fsnotify)
 ## Quick start
 
 Install
-```sh
-go get github.com/mozey/watcher
-```
-
-Update
-```sh
-go get -u github.com/mozey/watcher
-go install github.com/mozey/watcher
+```bash
+# Since Go 1.20.3 
+# "'go get' is no longer supported outside a module"
+go install github.com/mozey/watcher@latest
 ```
 
 Print version
-```sh    
+```bash  
 $GOPATH/bin/watcher -version
 ```
 
 Watch files, only output changes
-```sh
+```bash
 $GOPATH/bin/watcher -dir testdata
 ```
 
-Watch files recursively, pass in `APP_DIR`
-```sh
-APP_DIR=$(pwd) $GOPATH/bin/watcher -r -dir testdata
-```
-
 Watch files recursively, and print debug logs
-```sh
-APP_DEBUG=true APP_DIR=$(pwd) $GOPATH/bin/watcher -r -dir testdata
+```bash
+APP_DEBUG=true $GOPATH/bin/watcher -r -dir testdata
 ```
 
-Use `go run` inside module
-```sh
-APP_DEBUG=true APP_DIR=$(pwd) go run ./main.go -r -b $APP_DIR -dir testdata -dir testdata2
+
+## Testing
+
+Recursively watch for change in both `./testdata` and `./testdata2`
+```bash
+# APP_DIR env sets base dir
+APP_DEBUG=true APP_DIR=$(pwd) go run ./main.go -r -dir testdata -dir testdata2
+# Base dir set from flag
+APP_DEBUG=true go run ./main.go -r -b $APP_DIR -dir testdata -dir testdata2
 ```
 
-...another example with filters
-```sh
+Using absolute path
+```bash
+cd ${PRO_PATH}/watcher # Base dir defaults to working dir
+APP_DEBUG=true go run ./main.go -r \
+    -dir testdata \
+    -dir ${PRO_PATH}/watcher/testdata2
+```
+
+Example with filters
+```bash
 APP_DEBUG=true APP_DIR=$(pwd) go run ./main.go -r -dir testdata \
 -include ".*.txt$" \
 -include ".*.json$" \
@@ -49,3 +54,4 @@ APP_DEBUG=true APP_DIR=$(pwd) go run ./main.go -r -dir testdata \
 -exclude ".*\/d.txt$"
 ```
 
+**TODO** See comments in main_test.go
