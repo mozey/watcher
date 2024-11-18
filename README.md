@@ -2,6 +2,12 @@
 
 CLI wrapper for [fsnotify](https://github.com/fsnotify/fsnotify)
 
+Functional, but not maintained...
+
+Rather use one of the following
+- [air](https://github.com/air-verse/air)
+- [wgo](https://github.com/bokwoon95/wgo)
+
 ## Quick start
 
 Install
