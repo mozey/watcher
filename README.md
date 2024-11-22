@@ -2,11 +2,12 @@
 
 CLI wrapper for [fsnotify](https://github.com/fsnotify/fsnotify)
 
-Functional, but not maintained...
-
-Rather use one of the following
+You probably want to use one of the following tools instead
 - [air](https://github.com/air-verse/air)
 - [wgo](https://github.com/bokwoon95/wgo)
+
+The WatcherParams include a `Change` callback that's useful when using [Mage](https://magefile.org/) instead of a Makefile
+
 
 ## Quick start
 
